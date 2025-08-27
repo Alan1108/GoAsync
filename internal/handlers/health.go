@@ -1,55 +1,73 @@
 package handlers
 
 import (
+	"context"
+	"database/sql"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/alan.bermudez/goasync/pkg/logger"
+	"github.com/sirupsen/logrus"
 )
 
-// HealthResponse estructura de respuesta para el endpoint de salud
-type HealthResponse struct {
-	Status    string    `json:"status"`
-	Message   string    `json:"message"`
-	Timestamp time.Time `json:"timestamp"`
-	Version   string    `json:"version"`
+// HealthHandler maneja las peticiones de health check
+type HealthHandler struct {
+	db     *sql.DB
+	logger *logrus.Logger
 }
 
-// HealthCheck verifica el estado de salud de la API
-func HealthCheck(c *gin.Context) {
-	logger.Info("Health check request received")
-	
-	response := HealthResponse{
-		Status:    "ok",
-		Message:   "API funcionando correctamente",
-		Timestamp: time.Now(),
-		Version:   "1.0.0",
+// NewHealthHandler crea una nueva instancia del handler de health check
+func NewHealthHandler(db *sql.DB, logger *logrus.Logger) *HealthHandler {
+	return &HealthHandler{
+		db:     db,
+		logger: logger,
 	}
-	
-	c.JSON(http.StatusOK, response)
 }
 
-// DetailedHealthCheck proporciona información detallada del estado de salud
-func DetailedHealthCheck(c *gin.Context) {
-	logger.Info("Detailed health check request received")
-	
+// HealthCheck verifica el estado de la aplicación
+func (h *HealthHandler) HealthCheck(c *gin.Context) {
+	// Verificar conexión a la base de datos
+	var dbStatus string
+	var dbError error
+
+	if h.db != nil {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+		defer cancel()
+
+		err := h.db.PingContext(ctx)
+		if err != nil {
+			dbStatus = "error"
+			dbError = err
+		} else {
+			dbStatus = "ok"
+		}
+	} else {
+		dbStatus = "not_configured"
+	}
+
+	// Construir respuesta
 	response := gin.H{
 		"status":    "ok",
-		"message":   "API funcionando correctamente",
-		"timestamp": time.Now(),
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"version":   "1.0.0",
 		"services": gin.H{
-			"api": gin.H{
-				"status": "healthy",
-				"uptime": "running",
-			},
 			"database": gin.H{
-				"status": "not_configured",
-				"message": "Base de datos no configurada aún",
+				"status": dbStatus,
 			},
 		},
 	}
-	
-	c.JSON(http.StatusOK, response)
+
+	// Agregar error de base de datos si existe
+	if dbError != nil {
+		response["services"].(gin.H)["database"].(gin.H)["error"] = dbError.Error()
+		h.logger.Errorf("Health check failed - Database error: %v", dbError)
+	}
+
+	// Determinar código de estado HTTP
+	statusCode := http.StatusOK
+	if dbStatus == "error" {
+		statusCode = http.StatusServiceUnavailable
+	}
+
+	c.JSON(statusCode, response)
 }

@@ -1,145 +1,240 @@
-# Endpoints de la API GoAsync
+# API Endpoints - GoAsync
 
-## Endpoints de Salud
+Esta documentación describe todos los endpoints disponibles en la API de GoAsync.
 
-### GET /health
+## Base URL
 
-Verifica el estado básico de salud de la API.
-
-**Respuesta:**
-
-```json
-{
-  "status": "ok",
-  "message": "API funcionando correctamente",
-  "timestamp": "2024-01-01T00:00:00Z",
-  "version": "1.0.0"
-}
+```
+http://localhost:8080/api/v1
 ```
 
-### GET /health/detailed
+## Autenticación
 
-Proporciona información detallada del estado de salud de todos los servicios.
+Actualmente la API no requiere autenticación. En futuras versiones se implementará JWT.
 
-**Respuesta:**
+## Endpoints
+
+### Health Check
+
+- **GET** `/health` - Verifica el estado de la aplicación y la base de datos
+
+### Usuarios
+
+#### Obtener usuarios
+
+- **GET** `/users` - Lista todos los usuarios con paginación
+  - Query params:
+    - `page` (int, default: 1) - Número de página
+    - `per_page` (int, default: 10, max: 10000) - Elementos por página
+
+#### Obtener usuario específico
+
+- **GET** `/users/{id}` - Obtiene un usuario por su ID
+- **GET** `/users/{id}/profile` - Obtiene un usuario con su perfil completo
+- **GET** `/users/{id}/stats` - Obtiene estadísticas de un usuario
+- **GET** `/users/{id}/activity` - Obtiene actividad reciente de un usuario
+  - Query params:
+    - `limit` (int, default: 10, max: 10000) - Número de actividades a retornar
+
+#### Estadísticas de usuarios
+
+- **GET** `/users/stats` - Obtiene estadísticas de todos los usuarios
+
+#### Crear y gestionar usuarios
+
+- **POST** `/users` - Crea un nuevo usuario
+- **PUT** `/users/{id}` - Actualiza un usuario existente
+- **DELETE** `/users/{id}` - Elimina un usuario
+
+### Posts
+
+#### Obtener posts
+
+- **GET** `/posts` - Lista todos los posts con filtros y paginación
+
+  - Query params:
+    - `page` (int, default: 1) - Número de página
+    - `per_page` (int, default: 10, max: 10000) - Elementos por página
+    - `status` (string) - Filtrar por estado (draft, published, archived)
+    - `search` (string) - Buscar en título, contenido y extracto
+    - `category_id` (uuid) - Filtrar por categoría
+    - `author_id` (uuid) - Filtrar por autor
+    - `tag_id` (uuid) - Filtrar por tag
+
+- **GET** `/posts/published` - Lista solo posts publicados
+- **GET** `/posts/{id}` - Obtiene un post por su ID
+- **GET** `/posts/slug/{slug}` - Obtiene un post por su slug
+- **GET** `/posts/{id}/with-tags` - Obtiene un post con sus tags
+
+#### Crear y gestionar posts
+
+- **POST** `/posts` - Crea un nuevo post
+- **PUT** `/posts/{id}` - Actualiza un post existente
+- **DELETE** `/posts/{id}` - Elimina un post
+
+### Categorías
+
+#### Obtener categorías
+
+- **GET** `/categories` - Lista todas las categorías activas
+- **GET** `/categories/{id}` - Obtiene una categoría por su ID
+- **GET** `/categories/slug/{slug}` - Obtiene una categoría por su slug
+- **GET** `/categories/{id}/with-posts` - Obtiene una categoría con sus posts
+
+#### Crear y gestionar categorías
+
+- **POST** `/categories` - Crea una nueva categoría
+- **PUT** `/categories/{id}` - Actualiza una categoría existente
+- **DELETE** `/categories/{id}` - Elimina una categoría
+
+### Tags
+
+#### Obtener tags
+
+- **GET** `/tags` - Lista todos los tags
+- **GET** `/tags/popular` - Lista los tags más populares
+  - Query params:
+    - `limit` (int, default: 10, max: 10000) - Número de tags a retornar
+- **GET** `/tags/{id}` - Obtiene un tag por su ID
+- **GET** `/tags/slug/{slug}` - Obtiene un tag por su slug
+- **GET** `/tags/{id}/with-posts` - Obtiene un tag con sus posts
+
+#### Crear y gestionar tags
+
+- **POST** `/tags` - Crea un nuevo tag
+- **PUT** `/tags/{id}` - Actualiza un tag existente
+- **DELETE** `/tags/{id}` - Elimina un tag
+
+### Comentarios
+
+#### Obtener comentarios
+
+- **GET** `/comments` - Lista todos los comentarios
+  - Query params:
+    - `page` (int, default: 1) - Número de página
+    - `per_page` (int, default: 10, max: 10000) - Elementos por página
+    - `approved_only` (bool, default: true) - Solo comentarios aprobados
+- **GET** `/comments/{id}` - Obtiene un comentario por su ID
+- **GET** `/posts/{post_id}/comments` - Obtiene comentarios de un post específico
+
+#### Crear y gestionar comentarios
+
+- **POST** `/comments` - Crea un nuevo comentario
+- **PUT** `/comments/{id}` - Actualiza un comentario existente
+- **DELETE** `/comments/{id}` - Elimina un comentario
+- **PATCH** `/comments/{id}/approve` - Aprueba un comentario
+
+### Estadísticas
+
+#### Estadísticas generales
+
+- **GET** `/stats/database` - Obtiene estadísticas generales de la base de datos
+- **GET** `/stats/posts` - Obtiene estadísticas de posts
+
+#### Logs de actividad
+
+- **GET** `/stats/activity` - Obtiene logs de actividad con filtros
+
+  - Query params:
+    - `page` (int, default: 1) - Número de página
+    - `per_page` (int, default: 10, max: 10000) - Elementos por página
+    - `user_id` (uuid) - Filtrar por usuario
+    - `action` (string) - Filtrar por acción
+    - `resource_type` (string) - Filtrar por tipo de recurso
+    - `start_date` (date) - Fecha de inicio (YYYY-MM-DD)
+    - `end_date` (date) - Fecha de fin (YYYY-MM-DD)
+
+- **GET** `/stats/activity/recent` - Obtiene actividad reciente
+  - Query params:
+    - `limit` (int, default: 10, max: 10000) - Número de actividades a retornar
+- **GET** `/stats/activity/user/{user_id}` - Obtiene actividad de un usuario específico
+- **GET** `/stats/daily` - Obtiene estadísticas diarias
+  - Query params:
+    - `days` (int, default: 7) - Número de días a consultar
+
+## Códigos de Respuesta
+
+- **200** - OK - Operación exitosa
+- **201** - Created - Recurso creado exitosamente
+- **400** - Bad Request - Datos de entrada inválidos
+- **404** - Not Found - Recurso no encontrado
+- **409** - Conflict - Conflicto (ej: slug duplicado)
+- **500** - Internal Server Error - Error interno del servidor
+- **503** - Service Unavailable - Servicio no disponible
+
+## Formato de Respuesta
+
+Todas las respuestas siguen el siguiente formato:
 
 ```json
 {
-  "status": "ok",
-  "message": "API funcionando correctamente",
-  "timestamp": "2024-01-01T00:00:00Z",
-  "version": "1.0.0",
-  "services": {
-    "api": {
-      "status": "healthy",
-      "uptime": "running"
-    },
-    "database": {
-      "status": "not_configured",
-      "message": "Base de datos no configurada aún"
-    },
-    "redis": {
-      "status": "not_configured",
-      "message": "Redis no configurado aún"
-    }
+  "data": {...},
+  "message": "Mensaje descriptivo",
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total": 100,
+    "total_pages": 10
   }
 }
 ```
 
-## API v1
+## Paginación
 
-### GET /api/v1/
-
-Información general de la API.
-
-**Respuesta:**
+Los endpoints que soportan paginación incluyen información de paginación en la respuesta:
 
 ```json
 {
-  "message": "Bienvenido a la API GoAsync",
-  "version": "1.0.0",
-  "status": "active",
-  "timestamp": "2024-01-01T00:00:00Z"
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total": 100,
+    "total_pages": 10
+  }
 }
 ```
 
-### GET /api/v1/status
+## Filtros
 
-Estado detallado de la API con información de endpoints y características.
+Muchos endpoints soportan filtros a través de query parameters:
 
-**Respuesta:**
-
-```json
-{
-  "status": "operational",
-  "uptime": "running",
-  "version": "1.0.0",
-  "endpoints": [
-    "GET /health",
-    "GET /health/detailed",
-    "GET /api/v1/",
-    "GET /api/v1/status"
-  ],
-  "features": [
-    "REST API",
-    "Health checks",
-    "Structured logging",
-    "Environment configuration"
-  ]
-}
-```
-
-## Códigos de Estado HTTP
-
-- `200 OK`: Request exitoso
-- `204 No Content`: Request exitoso sin contenido (para OPTIONS)
-- `400 Bad Request`: Request mal formado
-- `404 Not Found`: Recurso no encontrado
-- `500 Internal Server Error`: Error interno del servidor
-
-## Headers de Respuesta
-
-- `Content-Type: application/json`
-- `Access-Control-Allow-Origin: *`
-- `Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT, DELETE, PATCH`
-- `Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With`
+- **Búsqueda**: `?search=texto`
+- **Filtros específicos**: `?status=published&category_id=uuid`
+- **Ordenamiento**: Implementado internamente (más reciente primero)
 
 ## Ejemplos de Uso
 
-### cURL
+### Obtener posts publicados
 
 ```bash
-# Health check básico
-curl http://localhost:8080/health
-
-# Health check detallado
-curl http://localhost:8080/health/detailed
-
-# Información de la API
-curl http://localhost:8080/api/v1/
-
-# Estado de la API
-curl http://localhost:8080/api/v1/status
+curl -X GET "http://localhost:8080/api/v1/posts/published?page=1&per_page=5"
 ```
 
-### JavaScript (Fetch)
+### Crear un nuevo post
 
-```javascript
-// Health check
-fetch("http://localhost:8080/health")
-  .then((response) => response.json())
-  .then((data) => console.log(data));
-
-// API info
-fetch("http://localhost:8080/api/v1/")
-  .then((response) => response.json())
-  .then((data) => console.log(data));
+```bash
+curl -X POST "http://localhost:8080/api/v1/posts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Mi primer post",
+    "content": "Contenido del post...",
+    "excerpt": "Resumen del post",
+    "category_id": "uuid-de-categoria",
+    "status": "published",
+    "tag_ids": ["uuid-tag-1", "uuid-tag-2"]
+  }'
 ```
 
-## Notas de Implementación
+### Obtener estadísticas de la base de datos
 
-- Todos los endpoints retornan JSON
-- Los timestamps están en formato ISO 8601
-- La API soporta CORS para desarrollo
-- Los logs se generan automáticamente para cada request
-- El puerto por defecto es 8080 (configurable via variable de entorno)
+```bash
+curl -X GET "http://localhost:8080/api/v1/stats/database"
+```
+
+## Notas
+
+- Todos los IDs son UUIDs
+- Las fechas están en formato ISO 8601
+- Los slugs son URLs amigables generados automáticamente
+- Los comentarios requieren aprobación antes de ser visibles públicamente
+- Los logs de actividad se generan automáticamente para todas las operaciones CRUD

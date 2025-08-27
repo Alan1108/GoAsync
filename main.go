@@ -1,15 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 
 	"github.com/alan.bermudez/goasync/internal/config"
 	"github.com/alan.bermudez/goasync/internal/handlers"
 	"github.com/alan.bermudez/goasync/pkg/logger"
-	"github.com/alan.bermudez/goasync/pkg/middleware"
 )
 
 func main() {
@@ -23,6 +24,21 @@ func main() {
 
 	// Inicializar logger
 	logger.Init(cfg.Log.Level)
+	log := logger.GetLogger()
+
+	// Conectar a la base de datos
+	db, err := sql.Open("postgres", cfg.Database.URL())
+	if err != nil {
+		log.Fatal("Error conectando a la base de datos:", err)
+	}
+	defer db.Close()
+
+	// Verificar conexión a la base de datos
+	if err := db.Ping(); err != nil {
+		log.Fatal("Error verificando conexión a la base de datos:", err)
+	}
+
+	log.Info("Conexión a la base de datos establecida exitosamente")
 
 	// Configurar el modo de Gin
 	if cfg.Server.GinMode == "release" {
@@ -32,34 +48,15 @@ func main() {
 	// Crear el router de Gin
 	router := gin.New()
 
-	// Middleware personalizado
-	router.Use(middleware.CORS())
-	router.Use(middleware.RequestLogger())
+	// Middleware de recuperación
 	router.Use(gin.Recovery())
 
-	// Rutas básicas
-	setupRoutes(router)
+	// Configurar rutas
+	handlers.SetupRoutes(router, db, log)
 
 	// Iniciar el servidor
-	logger.GetLogger().Printf("Servidor iniciando en el puerto %s", cfg.Server.Port)
+	log.Printf("Servidor iniciando en el puerto %s", cfg.Server.Port)
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
-		logger.Fatal("Error al iniciar el servidor:", err)
-	}
-}
-
-func setupRoutes(router *gin.Engine) {
-	// Ruta de salud
-	router.GET("/health", handlers.HealthCheck)
-	router.GET("/health/detailed", handlers.DetailedHealthCheck)
-
-	// Grupo de API v1
-	v1 := router.Group("/api/v1")
-	{
-		v1.GET("/", handlers.GetAPIInfo)
-		v1.GET("/status", handlers.GetAPIStatus)
-
-		// Aquí puedes agregar más rutas
-		// v1.GET("/users", handlers.GetUsers)
-		// v1.POST("/users", handlers.CreateUser)
+		log.Fatal("Error al iniciar el servidor:", err)
 	}
 }

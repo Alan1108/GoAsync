@@ -1,336 +1,257 @@
-# GoAsync API
+# GoAsync - API de Blog y Gestión de Contenido
 
-Una API REST moderna construida en Go con Gin framework, diseñada para ser escalable y fácil de mantener.
+GoAsync es una API RESTful completa desarrollada en Go para la gestión de blogs, usuarios, posts, categorías, tags y comentarios. La aplicación utiliza PostgreSQL como base de datos y Gin como framework web.
 
 ## 🚀 Características
 
-- **Framework**: Gin para routing HTTP
-- **Logging**: Logrus para logging estructurado
-- **Configuración**: Variables de entorno con godotenv
-- **Base de Datos**: PostgreSQL 15 con esquema completo
-- **Containerización**: Docker y Docker Compose
-- **Hot Reload**: Air para desarrollo con recarga automática
-- **Estructura**: Arquitectura limpia y organizada
-- **Seeder**: Datos de ejemplo incluidos
+- **API RESTful completa** con endpoints para todas las entidades
+- **Base de datos PostgreSQL** con esquema optimizado
+- **Paginación** en todos los endpoints de listado
+- **Filtros avanzados** para búsqueda y filtrado
+- **Logs de actividad** automáticos para auditoría
+- **Estadísticas** en tiempo real
+- **Documentación completa** de la API
+- **Docker** para desarrollo y despliegue
+- **Middleware** para CORS y logging
 
-## 📋 Prerrequisitos
+## 📋 Entidades Principales
+
+- **Usuarios**: Gestión completa de usuarios y perfiles
+- **Posts**: Artículos con soporte para categorías y tags
+- **Categorías**: Organización de contenido por temas
+- **Tags**: Etiquetado flexible de contenido
+- **Comentarios**: Sistema de comentarios con moderación
+- **Estadísticas**: Métricas y logs de actividad
+
+## 🛠️ Tecnologías
+
+- **Go 1.21+**
+- **Gin** - Framework web
+- **PostgreSQL** - Base de datos
+- **Docker & Docker Compose** - Contenedores
+- **Logrus** - Logging estructurado
+- **UUID** - Identificadores únicos
+
+## 📦 Instalación
+
+### Prerrequisitos
 
 - Go 1.21 o superior
-- Docker y Docker Compose (opcional)
-- PostgreSQL 15 (para instalación local)
-- Make (opcional, para usar comandos del Makefile)
+- Docker y Docker Compose
+- Git
 
-## 🛠️ Instalación
-
-### Opción 1: Instalación local
-
-1. Clona el repositorio:
+### Clonar el repositorio
 
 ```bash
-git clone <tu-repositorio>
-cd goasync
+git clone <repository-url>
+cd GoAsync
 ```
 
-2. Instala las dependencias:
+### Configuración con Docker (Recomendado)
+
+1. **Iniciar la base de datos:**
 
 ```bash
-make deps
-# o manualmente:
+docker-compose up -d postgres
+```
+
+2. **Configurar variables de entorno:**
+
+```bash
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
+
+3. **Ejecutar migraciones y seeders:**
+
+```bash
+# Las migraciones se ejecutan automáticamente al iniciar el contenedor
+# Para ejecutar seeders manualmente:
+docker-compose exec postgres psql -U postgres -d goasync -f /docker-entrypoint-initdb.d/seed.sql
+```
+
+4. **Compilar y ejecutar:**
+
+```bash
 go mod tidy
-go mod download
+go build -o goasync .
+./goasync
 ```
 
-3. Copia el archivo de variables de entorno:
+### Configuración Manual
+
+1. **Instalar dependencias:**
 
 ```bash
-cp env.example .env
+go mod tidy
 ```
 
-4. Configura la base de datos PostgreSQL local o usa Docker:
+2. **Configurar PostgreSQL:**
+
+- Crear base de datos `goasync`
+- Ejecutar scripts en `docker/postgres/init.sql`
+- Ejecutar seeders en `docker/postgres/seed.sql`
+
+3. **Configurar variables de entorno:**
 
 ```bash
-# Con Docker (recomendado)
-make db-up
-
-# O instala PostgreSQL localmente y crea la base de datos
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=goasync
+export DB_USER=postgres
+export DB_PASSWORD=password
+export PORT=8080
 ```
 
-5. Ejecuta el seeder para poblar la base de datos:
+4. **Ejecutar la aplicación:**
 
 ```bash
-make seed
-```
-
-6. Ejecuta la aplicación:
-
-```bash
-make run
-# o manualmente:
 go run main.go
 ```
 
-### Opción 2: Con Docker
+## 🌐 Endpoints de la API
 
-1. Construye y ejecuta con Docker Compose:
+La API está disponible en `http://localhost:8080/api/v1`
 
-```bash
-make docker-compose-up
-```
+### Endpoints Principales
 
-2. O solo la aplicación:
+#### Health Check
 
-```bash
-make docker-build
-make docker-run
-```
+- `GET /health` - Estado de la aplicación
 
-## 🗄️ Base de Datos
+#### Usuarios
 
-### Estructura Incluida
+- `GET /users` - Listar usuarios
+- `GET /users/{id}` - Obtener usuario
+- `POST /users` - Crear usuario
+- `PUT /users/{id}` - Actualizar usuario
+- `DELETE /users/{id}` - Eliminar usuario
 
-- **8 categorías** (Tecnología, Ciencia, Salud, etc.)
-- **5 usuarios** con perfiles completos
-- **10 tags** relacionados con tecnología
-- **4 posts** de ejemplo con contenido completo
-- **Sistema de comentarios** y relaciones
-- **Logs de actividad** de ejemplo
+#### Posts
 
-### Comandos de Base de Datos
+- `GET /posts` - Listar posts
+- `GET /posts/published` - Posts publicados
+- `GET /posts/{id}` - Obtener post
+- `POST /posts` - Crear post
+- `PUT /posts/{id}` - Actualizar post
+- `DELETE /posts/{id}` - Eliminar post
 
-```bash
-make db-up          # Levantar servicios de BD
-make db-down        # Detener servicios
-make db-reset       # Reiniciar BD
-make db-logs        # Ver logs
-make db-connect     # Conectar a PostgreSQL
-```
+#### Categorías
 
-### Seeder
+- `GET /categories` - Listar categorías
+- `GET /categories/{id}` - Obtener categoría
+- `POST /categories` - Crear categoría
+- `PUT /categories/{id}` - Actualizar categoría
+- `DELETE /categories/{id}` - Eliminar categoría
 
-```bash
-make seed           # Ejecutar seeder local
-make seed-docker    # Ejecutar seeder en Docker
-make seed-clean     # Limpiar y ejecutar seeder
-```
+#### Tags
 
-Para más detalles sobre la base de datos, consulta [DATABASE.md](docs/DATABASE.md).
+- `GET /tags` - Listar tags
+- `GET /tags/popular` - Tags populares
+- `POST /tags` - Crear tag
+- `PUT /tags/{id}` - Actualizar tag
+- `DELETE /tags/{id}` - Eliminar tag
 
-## 🌱 Seeder de Base de Datos
+#### Comentarios
 
-El proyecto incluye un seeder completo para poblar la base de datos con datos de ejemplo:
+- `GET /comments` - Listar comentarios
+- `GET /posts/{post_id}/comments` - Comentarios de un post
+- `POST /comments` - Crear comentario
+- `PATCH /comments/{id}/approve` - Aprobar comentario
 
-### Modos de Seeder
+#### Estadísticas
 
-#### 🔥 Seeder Masivo (Recomendado para pruebas de rendimiento)
+- `GET /stats/database` - Estadísticas generales
+- `GET /stats/activity` - Logs de actividad
+- `GET /stats/posts` - Estadísticas de posts
 
-```bash
-# Ejecutar seeder masivo localmente
-make seed-massive
+## 📖 Documentación Completa
 
-# Ejecutar seeder masivo en Docker
-make seed-massive-docker
+Consulta la documentación detallada de la API en:
 
-# Usar script directamente
-./scripts/seed-db.sh --massive
-```
+- [API Endpoints](docs/API_ENDPOINTS.md)
+- [Base de Datos](docs/DATABASE.md)
 
-**Genera aproximadamente 60,000+ registros:**
+## 🧪 Ejemplos de Uso
 
-- 1,000 usuarios con nombres realistas
-- 15 categorías de contenido
-- 100+ tags tecnológicos y generales
-- 5,000 posts de ejemplo
-- 15,000 comentarios
-- 25,000 relaciones post-tag
-- 10,000 logs de actividad
-
-#### 📝 Seeder Básico (Para desarrollo rápido)
+### Obtener posts publicados
 
 ```bash
-# Ejecutar seeder básico localmente
-make seed-small
-
-# Ejecutar seeder básico en Docker
-make seed-small-docker
-
-# Usar script directamente
-./scripts/seed-db.sh --small
+curl -X GET "http://localhost:8080/api/v1/posts/published?page=1&per_page=5"
 ```
 
-**Genera aproximadamente 30 registros:**
-
-- 5 usuarios básicos
-- 8 categorías principales
-- 10 tags esenciales
-- 4 posts de ejemplo
-- Comentarios básicos
-
-#### ⚡ Seeder por Defecto
+### Crear un nuevo post
 
 ```bash
-# Ejecutar seeder por defecto
-make seed
-
-# Ejecutar en Docker
-make seed-docker
-
-# Usar script directamente
-./scripts/seed-db.sh
+curl -X POST "http://localhost:8080/api/v1/posts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Mi primer post",
+    "content": "Contenido del post...",
+    "excerpt": "Resumen del post",
+    "category_id": "uuid-de-categoria",
+    "status": "published",
+    "tag_ids": ["uuid-tag-1", "uuid-tag-2"]
+  }'
 ```
 
-### Comandos del Seeder
+### Obtener estadísticas
 
 ```bash
-# Comandos principales
-make seed              # Seeder básico local
-make seed-docker       # Seeder básico en Docker
-make seed-massive      # Seeder masivo local
-make seed-massive-docker # Seeder masivo en Docker
-make seed-small        # Seeder pequeño local
-make seed-small-docker # Seeder pequeño en Docker
-
-# Con limpieza de base de datos
-make seed-clean        # Limpiar DB y ejecutar seeder básico
-
-# Script bash con opciones avanzadas
-./scripts/seed-db.sh --help           # Ver todas las opciones
-./scripts/seed-db.sh --massive        # Seeder masivo
-./scripts/seed-db.sh --small          # Seeder pequeño
-./scripts/seed-db.sh --docker         # Ejecutar en Docker
-./scripts/seed-db.sh --clean          # Limpiar DB primero
-./scripts/seed-db.sh --verbose        # Modo verbose
+curl -X GET "http://localhost:8080/api/v1/stats/database"
 ```
 
-### Características del Seeder
+## 🔧 Desarrollo
 
-- **Inserción en lotes**: Optimizado para insertar miles de registros eficientemente
-- **Datos realistas**: Nombres, emails y contenido que simulan un entorno real
-- **Relaciones coherentes**: Mantiene integridad referencial entre entidades
-- **Logging detallado**: Progreso en tiempo real con emojis y estadísticas
-- **Manejo de errores**: Recuperación robusta y mensajes informativos
-- **Flexibilidad**: Múltiples modos para diferentes necesidades
+### Estructura del Proyecto
 
-### Casos de Uso
+```
+GoAsync/
+├── cmd/                    # Comandos de la aplicación
+├── docker/                 # Configuración de Docker
+├── docs/                   # Documentación
+├── internal/               # Código interno de la aplicación
+│   ├── config/            # Configuración
+│   ├── handlers/          # Manejadores HTTP
+│   ├── models/            # Modelos de datos
+│   └── services/          # Lógica de negocio
+├── pkg/                   # Paquetes públicos
+│   ├── database/          # Utilidades de base de datos
+│   ├── logger/            # Sistema de logging
+│   └── middleware/        # Middleware HTTP
+├── scripts/               # Scripts de utilidad
+├── main.go               # Punto de entrada
+├── go.mod                # Dependencias Go
+└── docker-compose.yml    # Configuración de Docker Compose
+```
 
-#### 🚀 Para Pruebas de Rendimiento
+### Comandos Útiles
 
 ```bash
-make seed-massive
+# Compilar
+go build -o goasync .
+
+# Ejecutar tests
+go test ./...
+
+# Ejecutar con hot reload (requiere air)
+air
+
+# Generar documentación
+godoc -http=:6060
+
+# Limpiar
+go clean
 ```
 
-Ideal para probar:
-
-- Consultas complejas con grandes volúmenes de datos
-- Rendimiento de índices y optimizaciones
-- Escalabilidad de la aplicación
-- Estrategias de paginación
-
-#### 🧪 Para Desarrollo Rápido
+### Variables de Entorno
 
 ```bash
-make seed-small
-```
-
-Perfecto para:
-
-- Desarrollo y debugging
-- Pruebas unitarias
-- Demostraciones
-- Entornos de staging
-
-#### 🔄 Para Reinicio Limpio
-
-```bash
-make seed-clean
-```
-
-Útil cuando:
-
-- Cambias el esquema de la base de datos
-- Quieres empezar desde cero
-- Hay inconsistencias en los datos
-- Cambias entre diferentes modos de seeder
-
-## 🚀 Desarrollo
-
-### Comandos útiles
-
-```bash
-make help          # Muestra todos los comandos disponibles
-make dev           # Ejecuta con hot reload (Air)
-make dev-full      # Levanta BD + seeder + aplicación
-make dev-docker    # Todo en Docker
-make test          # Ejecuta los tests
-make lint          # Ejecuta el linter
-make format        # Formatea el código
-make clean         # Limpia archivos generados
-```
-
-### Hot Reload
-
-Para desarrollo con recarga automática:
-
-```bash
-make dev
-```
-
-Esto instalará Air automáticamente y ejecutará la aplicación con hot reload.
-
-## 📁 Estructura del proyecto
-
-```
-goasync/
-├── main.go                    # Punto de entrada de la aplicación
-├── go.mod                     # Dependencias de Go
-├── Makefile                   # Comandos útiles
-├── Dockerfile                 # Configuración de Docker
-├── docker-compose.yml         # Orquestación de servicios
-├── .air.toml                  # Configuración de Air (hot reload)
-├── env.example                # Variables de entorno de ejemplo
-├── docker/                    # Configuración de Docker
-│   └── postgres/             # Dockerfile y scripts de PostgreSQL
-│       ├── Dockerfile        # Dockerfile personalizado para PostgreSQL
-│       ├── init.sql          # Script de inicialización de la BD
-│       └── seed.sql          # Script de datos de ejemplo
-├── cmd/                       # Comandos de la aplicación
-│   └── seeder/               # Seeder de base de datos
-│       └── main.go           # Seeder principal
-├── scripts/                   # Scripts de utilidad
-│   └── seed-db.sh            # Script bash para ejecutar seeder
-├── internal/                  # Código interno de la aplicación
-│   ├── config/               # Configuración y variables de entorno
-│   ├── handlers/             # Handlers HTTP con tests
-│   ├── models/               # Modelos de datos
-│   └── services/             # Lógica de negocio
-├── pkg/                       # Paquetes reutilizables
-│   ├── database/             # Conexiones de base de datos
-│   ├── logger/               # Sistema de logging personalizado
-│   └── middleware/           # Middleware HTTP
-├── docs/                      # Documentación
-│   ├── API_ENDPOINTS.md      # Documentación de endpoints
-│   └── DATABASE.md           # Documentación de base de datos
-└── README.md                  # Este archivo
-```
-
-## 🌐 Endpoints disponibles
-
-- `GET /health` - Verificación de salud de la API
-- `GET /health/detailed` - Verificación detallada de salud
-- `GET /api/v1/` - Información de la API v1
-- `GET /api/v1/status` - Estado detallado de la API
-
-## 🔧 Configuración
-
-### Variables de entorno
-
-Crea un archivo `.env` basado en `env.example`:
-
-```bash
-# Configuración del servidor
+# Servidor
 PORT=8080
 GIN_MODE=debug
 
-# Configuración de la base de datos
+# Base de datos
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=goasync
@@ -338,120 +259,108 @@ DB_USER=postgres
 DB_PASSWORD=password
 DB_SSLMODE=disable
 
-# Configuración de Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
-
-# Configuración de logs
+# Logging
 LOG_LEVEL=info
 ```
-
-### Puertos
-
-- **API**: 8080 (configurable via PORT)
-- **PostgreSQL**: 5432
-- **Redis**: 6379
-- **pgAdmin**: 5050
-
-## 🧪 Testing
-
-```bash
-make test              # Tests básicos
-make test-coverage     # Tests con cobertura
-```
-
-## 📦 Build
-
-```bash
-make build             # Compila la aplicación
-```
-
-El binario se generará en `bin/goasync`.
 
 ## 🐳 Docker
 
 ### Construir imagen
 
 ```bash
-make docker-build
+docker build -t goasync .
 ```
 
-### Ejecutar contenedor
+### Ejecutar con Docker Compose
 
 ```bash
-make docker-run
+docker-compose up -d
 ```
 
-### Con Docker Compose
+### Ver logs
 
 ```bash
-make docker-compose-up
+docker-compose logs -f
 ```
 
-### Servicios incluidos
+## 📊 Base de Datos
 
-- **goasync-app**: API principal
-- **postgres**: Base de datos PostgreSQL
-- **redis**: Cache y sesiones
-- **pgadmin**: Interfaz web para PostgreSQL
+La aplicación incluye:
 
-## 📝 Logs
+- **Esquema completo** con todas las tablas necesarias
+- **Índices optimizados** para consultas rápidas
+- **Triggers** para actualización automática de timestamps
+- **Funciones** para estadísticas y utilidades
+- **Vistas** para consultas complejas
+- **Datos de ejemplo** para testing
 
-La aplicación usa Logrus para logging estructurado. Los logs se muestran en consola en modo desarrollo.
+### Migraciones
 
-## 🔍 Monitoreo
+Las migraciones se ejecutan automáticamente al iniciar el contenedor de PostgreSQL.
 
-### pgAdmin
+### Seeders
 
-Accede a pgAdmin en http://localhost:5050:
+Los datos de ejemplo incluyen:
 
-- **Email**: admin@goasync.com
-- **Contraseña**: admin123
+- 5 usuarios con perfiles
+- 8 categorías
+- 10 tags
+- 4 posts con contenido completo
+- Comentarios de ejemplo
+- Logs de actividad
 
-### Health Checks
+## 🔒 Seguridad
 
-Los contenedores incluyen health checks automáticos para PostgreSQL y Redis.
+- **Validación de entrada** en todos los endpoints
+- **Sanitización** de datos
+- **Logs de auditoría** para todas las operaciones
+- **Manejo de errores** estructurado
+- **CORS** configurado para desarrollo
 
-## 🚨 Solución de Problemas
+## 🚀 Despliegue
 
-### Problemas Comunes
+### Producción
 
-1. **Puerto 5432 ocupado**: Usa `make db-up` para levantar PostgreSQL en Docker
-2. **Error de conexión**: Verifica que la base de datos esté ejecutándose
-3. **Error de permisos**: Usa `make db-reset` para limpiar volúmenes
+1. **Configurar variables de entorno de producción**
+2. **Usar PostgreSQL de producción**
+3. **Configurar logging apropiado**
+4. **Implementar autenticación JWT**
+5. **Configurar HTTPS**
 
-### Verificación de Estado
+### Monitoreo
 
-```bash
-# Ver estado de contenedores
-docker-compose ps
-
-# Ver logs
-make db-logs
-
-# Conectar a base de datos
-make db-connect
-```
+- **Health checks** automáticos
+- **Logs estructurados** con Logrus
+- **Métricas** de base de datos
+- **Estadísticas** de actividad
 
 ## 🤝 Contribuir
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+5. Abrir un Pull Request
 
-## 📄 Licencia
+## 📝 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ## 🆘 Soporte
 
-Si tienes alguna pregunta o problema, por favor abre un issue en el repositorio.
+Si tienes problemas o preguntas:
 
-## 📚 Documentación Adicional
+1. Revisa la documentación
+2. Busca en los issues existentes
+3. Crea un nuevo issue con detalles del problema
 
-- [Endpoints de la API](docs/API_ENDPOINTS.md)
-- [Base de Datos](docs/DATABASE.md)
+## 🎯 Roadmap
+
+- [ ] Autenticación JWT
+- [ ] Subida de archivos
+- [ ] API GraphQL
+- [ ] Cache con Redis
+- [ ] Tests automatizados
+- [ ] CI/CD pipeline
+- [ ] Documentación con Swagger
+- [ ] Dashboard de administración

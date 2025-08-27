@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -25,6 +26,12 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	SSLMode  string
+}
+
+// URL construye la URL de conexión a PostgreSQL
+func (d *DatabaseConfig) URL() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		d.User, d.Password, d.Host, d.Port, d.Name, d.SSLMode)
 }
 
 // LogConfig configuración de logs
